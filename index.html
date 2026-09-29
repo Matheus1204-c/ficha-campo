@@ -1,0 +1,1465 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+<title>Ficha de Campo — Verticalização da Orla de Fortaleza</title>
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#0A4448">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Ficha Verticalização">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css">
+<style>
+  :root{
+    --bg:#F7F7F5;
+    --paper:#FFFFFF;
+    --ink:#1B1E1D;
+    --ink-soft:#5B615E;
+    --line:#DEDDD7;
+    --sea:#0E5C63;
+    --sea-dark:#0A4448;
+    --sea-soft:#E4EFEE;
+    --danger:#A23B2E;
+    --danger-soft:#F5E7E3;
+    --warn:#B4841E;
+    --radius:10px;
+    font-size:16px;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    background:var(--bg);
+    color:var(--ink);
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    -webkit-tap-highlight-color:transparent;
+    padding-bottom:48px;
+  }
+  .mono{font-family:ui-monospace,SFMono-Regular,"SF Mono",Menlo,Consolas,monospace;}
+
+  header{
+    position:sticky; top:0; z-index:20;
+    background:var(--sea-dark);
+    color:#fff;
+    padding:14px 16px 0 16px;
+  }
+  header h1{
+    margin:0 0 2px 0;
+    font-size:15px;
+    font-weight:600;
+    letter-spacing:.2px;
+    line-height:1.3;
+  }
+  header .sub{
+    font-size:12.5px;
+    color:#B9D6D3;
+    margin-bottom:12px;
+  }
+  header .credit{
+    font-size:10.5px;
+    color:#7FA6A3;
+    margin:-8px 0 12px 0;
+    line-height:1.4;
+  }
+  .tabs{
+    display:flex;
+    gap:2px;
+  }
+  .tab{
+    flex:1;
+    text-align:center;
+    padding:10px 6px;
+    font-size:13px;
+    font-weight:600;
+    color:#B9D6D3;
+    background:transparent;
+    border:none;
+    border-bottom:3px solid transparent;
+    cursor:pointer;
+  }
+  .tab.active{
+    color:#fff;
+    border-bottom-color:#57C4B7;
+  }
+  .badge{
+    display:inline-block;
+    background:#57C4B7;
+    color:#083436;
+    font-size:11.5px;
+    font-weight:700;
+    padding:1px 7px;
+    border-radius:20px;
+    margin-left:6px;
+  }
+
+  main{
+    max-width:520px;
+    margin:0 auto;
+    padding:16px;
+  }
+
+  @media(min-width:860px){
+    main{ max-width:920px; }
+  }
+
+  .card{
+    background:var(--paper);
+    border:1px solid var(--line);
+    border-radius:var(--radius);
+    padding:16px;
+    margin-bottom:14px;
+  }
+
+  .field{
+    margin-bottom:18px;
+  }
+  .field:last-child{margin-bottom:0;}
+  label.field-label{
+    display:block;
+    font-size:12.5px;
+    font-weight:700;
+    color:var(--ink-soft);
+    margin-bottom:7px;
+    letter-spacing:.1px;
+  }
+  input[type=text], input[type=number], textarea, select{
+    width:100%;
+    font-size:16px;
+    padding:11px 12px;
+    border:1px solid var(--line);
+    border-radius:8px;
+    background:#fff;
+    color:var(--ink);
+    font-family:inherit;
+  }
+  input:focus, textarea:focus, select:focus{
+    outline:2px solid var(--sea);
+    outline-offset:1px;
+    border-color:var(--sea);
+  }
+  textarea{resize:vertical; min-height:60px;}
+
+  .id-display{
+    font-size:26px;
+    font-weight:700;
+    color:var(--sea-dark);
+    letter-spacing:.5px;
+  }
+
+  .stepper{
+    display:flex;
+    align-items:stretch;
+    gap:8px;
+  }
+  .stepper input{
+    text-align:center;
+    font-weight:700;
+    font-size:18px;
+  }
+  .step-btn{
+    width:46px;
+    flex:0 0 46px;
+    font-size:20px;
+    font-weight:700;
+    border:1px solid var(--line);
+    background:#F0F0EE;
+    color:var(--ink);
+    border-radius:8px;
+    cursor:pointer;
+  }
+  .step-btn:active{background:var(--sea-soft);}
+
+  .chip-row{
+    display:flex;
+    flex-wrap:wrap;
+    gap:8px;
+  }
+  .chip{
+    padding:9px 14px;
+    border-radius:20px;
+    border:1px solid var(--line);
+    background:#fff;
+    font-size:14px;
+    font-weight:600;
+    color:var(--ink-soft);
+    cursor:pointer;
+  }
+  .chip.selected{
+    background:var(--sea);
+    border-color:var(--sea);
+    color:#fff;
+  }
+  .chip.wide{flex:1 1 46%; text-align:center;}
+  .chip.third{flex:1 1 30%; text-align:center;}
+
+  .inline-toggle{
+    display:flex;
+    align-items:center;
+    gap:8px;
+    margin-top:8px;
+    font-size:13px;
+    color:var(--ink-soft);
+  }
+  .inline-toggle input{width:auto; padding:0;}
+
+  .btn{
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    gap:6px;
+    border:none;
+    border-radius:8px;
+    font-size:14px;
+    font-weight:700;
+    padding:11px 16px;
+    cursor:pointer;
+    font-family:inherit;
+  }
+  .btn-primary{
+    background:var(--sea);
+    color:#fff;
+    width:100%;
+    padding:16px;
+    font-size:16px;
+    border-radius:10px;
+  }
+  .btn-primary:active{background:var(--sea-dark);}
+  .btn-primary:disabled{opacity:.6;}
+  .btn-ghost{
+    background:#fff;
+    border:1px solid var(--line);
+    color:var(--ink);
+  }
+  .btn-danger{
+    background:var(--danger-soft);
+    color:var(--danger);
+  }
+  .btn-sm{
+    padding:7px 10px;
+    font-size:12.5px;
+    border-radius:7px;
+  }
+  .row-actions{display:flex; gap:6px; flex-wrap:wrap;}
+
+  .searchbar{
+    display:flex;
+    gap:8px;
+    margin-bottom:12px;
+  }
+  .searchbar input{flex:1;}
+
+  table{
+    width:100%;
+    border-collapse:collapse;
+    font-size:13px;
+  }
+  th, td{
+    text-align:left;
+    padding:9px 8px;
+    border-bottom:1px solid var(--line);
+    white-space:nowrap;
+  }
+  th{
+    background:#F0F0EE;
+    font-size:11px;
+    text-transform:uppercase;
+    letter-spacing:.4px;
+    color:var(--ink-soft);
+    cursor:pointer;
+    position:sticky;
+    top:0;
+  }
+  th .arrow{font-size:10px; margin-left:2px;}
+  td.obs{
+    white-space:normal;
+    max-width:160px;
+    color:var(--ink-soft);
+  }
+  .table-wrap{
+    overflow-x:auto;
+    border:1px solid var(--line);
+    border-radius:var(--radius);
+    background:#fff;
+  }
+  .empty-state{
+    text-align:center;
+    padding:40px 16px;
+    color:var(--ink-soft);
+    font-size:14px;
+  }
+  .thumb{
+    width:42px; height:42px;
+    object-fit:cover;
+    border-radius:6px;
+    border:1px solid var(--line);
+    display:block;
+  }
+
+  .screen{display:none;}
+  .screen.active{display:block;}
+
+  .export-row{
+    display:flex;
+    gap:8px;
+    margin-top:12px;
+    flex-wrap:wrap;
+  }
+  .export-row .btn{flex:1; min-width:140px;}
+  .backup-hint{
+    font-size:12px;
+    color:var(--ink-soft);
+    margin-top:8px;
+    line-height:1.4;
+  }
+  .app-footer{
+    text-align:center;
+    font-size:11px;
+    color:var(--ink-soft);
+    padding:18px 8px 4px 8px;
+    line-height:1.5;
+  }
+  .gps-link{
+    color:var(--sea);
+    font-weight:600;
+    text-decoration:none;
+    font-size:12.5px;
+  }
+  .gps-pending{
+    color:var(--warn);
+    font-size:12px;
+  }
+
+  .toast{
+    position:fixed;
+    bottom:18px;
+    left:50%;
+    transform:translateX(-50%);
+    background:var(--ink);
+    color:#fff;
+    padding:10px 18px;
+    border-radius:20px;
+    font-size:13.5px;
+    z-index:50;
+    opacity:0;
+    pointer-events:none;
+    transition:opacity .2s;
+    max-width:90vw;
+    text-align:center;
+  }
+  .toast.show{opacity:1;}
+
+  .edit-banner{
+    background:#FDF2E3;
+    border:1px solid #EAD3A0;
+    color:#7A5610;
+    font-size:13px;
+    font-weight:600;
+    padding:9px 12px;
+    border-radius:8px;
+    margin-bottom:14px;
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    gap:8px;
+  }
+  .edit-banner button{
+    background:none;
+    border:none;
+    color:#7A5610;
+    text-decoration:underline;
+    font-size:13px;
+    cursor:pointer;
+    font-weight:600;
+  }
+
+  /* ---- layout: form + map ---- */
+  .layout{
+    display:grid;
+    grid-template-columns:1fr;
+    grid-template-areas: "idcard" "mapcard" "restcard";
+    gap:14px;
+  }
+  @media(min-width:860px){
+    .layout{
+      grid-template-columns: 1fr 340px;
+      grid-template-areas: "idcard mapcard" "restcard mapcard";
+      align-items:start;
+    }
+  }
+  .card-id{grid-area:idcard;}
+  .map-col{grid-area:mapcard;}
+  .card-rest{grid-area:restcard;}
+  @media(min-width:860px){
+    .map-col{ position:sticky; top:150px; }
+  }
+
+  #leafletMap{
+    width:100%;
+    height:220px;
+    border-radius:8px;
+    border:1px solid var(--line);
+  }
+  .map-fallback{
+    display:none;
+    background:#F0F0EE;
+    border:1px dashed var(--line);
+    border-radius:8px;
+    padding:16px;
+    font-size:12.5px;
+    color:var(--ink-soft);
+    text-align:center;
+  }
+  .coord-text{
+    font-size:12.5px;
+    color:var(--ink-soft);
+    margin-top:8px;
+  }
+  .map-actions{
+    display:flex;
+    gap:8px;
+    margin-top:8px;
+  }
+  .map-actions .btn{flex:1;}
+
+  /* ---- foto ---- */
+  #fotoPreview{
+    max-width:100%;
+    border-radius:8px;
+    border:1px solid var(--line);
+    display:block;
+  }
+  .foto-actions{
+    display:flex;
+    gap:8px;
+    margin-top:8px;
+  }
+  .foto-actions .btn{flex:1;}
+
+  datalist{}
+</style>
+</head>
+<body>
+
+<header>
+  <h1>FICHA DE CAMPO — VERTICALIZAÇÃO DA ORLA DE FORTALEZA</h1>
+  <div class="sub">Metodologia de referência: Paula et al. (2010)<span class="badge" id="counterBadge">0</span></div>
+  <div class="credit">Pesquisa de Matheus Cordeiro Façanha — Doutorando em Geografia, Programa de Pós-Graduação em Geografia, Universidade Estadual do Ceará (UECE)</div>
+  <div class="tabs">
+    <button class="tab active" data-screen="form">Ficha de Campo</button>
+    <button class="tab" data-screen="table">Registros de Campo</button>
+  </div>
+</header>
+
+<main>
+
+  <!-- TELA 1: FICHA -->
+  <section class="screen active" id="screen-form">
+
+    <div id="editBanner" class="edit-banner" style="display:none;">
+      <span>Editando registro <span id="editingIdLabel" class="mono"></span></span>
+      <button id="cancelEditBtn" type="button">cancelar</button>
+    </div>
+
+    <div class="layout">
+
+      <div class="card card-id">
+        <div class="field">
+          <label class="field-label">ID DA EDIFICAÇÃO</label>
+          <div class="id-display mono" id="idDisplay">E001</div>
+        </div>
+
+        <div class="field">
+          <label class="field-label" for="quarteirao">LOCALIZAÇÃO / QUARTEIRÃO</label>
+          <input type="text" id="quarteirao" list="quarteiraoList" placeholder="Ex.: Q12, Av. Beira-Mar / Rua X" autocomplete="off">
+          <datalist id="quarteiraoList"></datalist>
+        </div>
+      </div>
+
+      <div class="card map-col">
+        <label class="field-label">LOCALIZAÇÃO NO MAPA</label>
+        <div id="leafletMap"></div>
+        <div id="mapFallback" class="map-fallback">Mapa indisponível offline no momento. As coordenadas continuam sendo capturadas automaticamente pelo GPS do aparelho ao salvar.</div>
+        <div class="coord-text" id="coordText">Nenhuma localização definida.</div>
+        <div class="map-actions">
+          <button type="button" class="btn btn-ghost btn-sm" id="getLocBtn">📍 Obter minha localização</button>
+          <button type="button" class="btn btn-ghost btn-sm" id="clearLocBtn">Limpar</button>
+        </div>
+        <div class="backup-hint">No iPhone, a 1ª vez pode levar até 20-25s. Se pedir permissão, toque em "Permitir". Se não aparecer nada, confira: Ajustes → Privacidade e Segurança → Serviços de Localização (ligado) → Safari → Perguntar ou Permitir.</div>
+        <div class="field" style="margin-top:12px;">
+          <label class="field-label" for="manualCoords">OU DIGITE LAT, LNG MANUALMENTE</label>
+          <div style="display:flex; gap:8px;">
+            <input type="text" id="manualCoords" placeholder="Ex.: -3.722345, -38.505123" inputmode="decimal" style="flex:1;">
+            <button type="button" class="btn btn-ghost btn-sm" id="manualCoordsBtn">Usar</button>
+          </div>
+          <div class="backup-hint" style="margin-top:6px;">No iPhone: abra o app Mapas nativo, segure o dedo no local da edificação e toque em "Copiar coordenadas"; depois cole aqui.</div>
+        </div>
+      </div>
+
+      <div class="card card-rest">
+        <div class="field">
+          <label class="field-label" for="pavimentos">NÚMERO DE PAVIMENTOS</label>
+          <div class="stepper">
+            <button type="button" class="step-btn" id="pavMinus">−</button>
+            <input type="number" id="pavimentos" inputmode="numeric" min="0" step="1" placeholder="0">
+            <button type="button" class="step-btn" id="pavPlus">+</button>
+          </div>
+        </div>
+
+        <div class="field">
+          <label class="field-label">USO PREDOMINANTE</label>
+          <div class="chip-row" id="usoChips">
+            <button type="button" class="chip wide" data-value="Residencial">Residencial</button>
+            <button type="button" class="chip wide" data-value="Hotel">Hotel</button>
+            <button type="button" class="chip wide" data-value="Comércio">Comércio</button>
+            <button type="button" class="chip wide" data-value="Clube">Clube</button>
+            <button type="button" class="chip wide" data-value="Instituição">Instituição</button>
+            <button type="button" class="chip wide" data-value="Misto (Residencial e Comercial)">Misto (Resid. + Comercial)</button>
+            <button type="button" class="chip wide" data-value="Outro">Outro</button>
+            <button type="button" class="chip wide" data-value="Não identificado">Não identificado</button>
+          </div>
+        </div>
+
+        <div class="field">
+          <label class="field-label" for="ano">ANO DE CONSTRUÇÃO</label>
+          <div class="stepper">
+            <button type="button" class="step-btn" id="anoMinus">−</button>
+            <input type="number" id="ano" inputmode="numeric" placeholder="Ex.: 1985">
+            <button type="button" class="step-btn" id="anoPlus">+</button>
+          </div>
+          <div class="inline-toggle">
+            <input type="checkbox" id="anoIndef">
+            <label for="anoIndef">Ano não identificado</label>
+          </div>
+        </div>
+
+        <div class="field">
+          <label class="field-label">PRÉDIO OCUPADO?</label>
+          <div class="chip-row" id="ocupadoChips">
+            <button type="button" class="chip wide" data-value="Sim">Sim</button>
+            <button type="button" class="chip wide" data-value="Não">Não</button>
+          </div>
+        </div>
+
+        <div class="field">
+          <label class="field-label">CONDIÇÃO DO PRÉDIO</label>
+          <div class="chip-row" id="condicaoChips">
+            <button type="button" class="chip third" data-value="Original">Original</button>
+            <button type="button" class="chip third" data-value="Novo">Novo</button>
+            <button type="button" class="chip third" data-value="Demolido / em obras">Demolido / em obras</button>
+          </div>
+        </div>
+
+        <div class="field">
+          <label class="field-label">HÁ UNIDADE/APARTAMENTO À VENDA?</label>
+          <div class="chip-row" id="vendaChips">
+            <button type="button" class="chip wide" data-value="Sim">Sim</button>
+            <button type="button" class="chip wide" data-value="Não">Não</button>
+          </div>
+        </div>
+
+        <div class="field" id="valorPedidoField" style="display:none;">
+          <label class="field-label" for="valorPedido">VALOR PEDIDO (R$)</label>
+          <input type="number" id="valorPedido" inputmode="numeric" min="0" step="1000" placeholder="Ex.: 850000">
+        </div>
+
+        <div class="field">
+          <label class="field-label">FOTO DA FACHADA <span style="font-weight:400; color:var(--ink-soft);">(opcional)</span></label>
+          <input type="file" accept="image/*" capture="environment" id="fotoInput" style="display:none;">
+          <div id="fotoPreviewWrap" style="display:none;">
+            <img id="fotoPreview" alt="Prévia da foto da fachada">
+            <div class="foto-actions">
+              <button type="button" class="btn btn-ghost btn-sm" id="fotoRetakeBtn">Trocar foto</button>
+              <button type="button" class="btn btn-danger btn-sm" id="fotoRemoveBtn">Remover</button>
+            </div>
+          </div>
+          <button type="button" class="btn btn-ghost" id="fotoTakeBtn" style="width:100%;">📷 Tirar foto da fachada</button>
+        </div>
+
+        <div class="field">
+          <label class="field-label" for="obs">OBSERVAÇÕES <span style="font-weight:400; color:var(--ink-soft);">(opcional)</span></label>
+          <textarea id="obs" placeholder="Notas adicionais sobre a edificação..."></textarea>
+        </div>
+      </div>
+
+    </div>
+
+    <div style="height:14px;"></div>
+    <button class="btn btn-primary" id="saveBtn">SALVAR</button>
+    <div style="height:10px;"></div>
+    <button class="btn btn-ghost" id="newBtn" style="width:100%;">NOVA EDIFICAÇÃO (limpar ficha)</button>
+  </section>
+
+  <!-- TELA 2: REGISTROS -->
+  <section class="screen" id="screen-table">
+    <div class="searchbar">
+      <input type="text" id="searchInput" placeholder="Buscar por ID ou quarteirão...">
+    </div>
+
+    <div class="table-wrap">
+      <table id="recordsTable">
+        <thead>
+          <tr>
+            <th data-key="id">ID<span class="arrow"></span></th>
+            <th data-key="quarteirao">Quarteirão<span class="arrow"></span></th>
+            <th data-key="pavimentos">Pav.<span class="arrow"></span></th>
+            <th data-key="uso">Uso<span class="arrow"></span></th>
+            <th data-key="ano">Ano<span class="arrow"></span></th>
+            <th data-key="ocupado">Ocupado<span class="arrow"></span></th>
+            <th data-key="condicaoPredio">Condição<span class="arrow"></span></th>
+            <th data-key="apartamentoVenda">À venda<span class="arrow"></span></th>
+            <th>Valor pedido</th>
+            <th>Foto</th>
+            <th>Obs.</th>
+            <th data-key="createdAt">Quando<span class="arrow"></span></th>
+            <th>GPS</th>
+            <th>Ações</th>
+          </tr>
+        </thead>
+        <tbody id="tableBody"></tbody>
+      </table>
+      <div class="empty-state" id="emptyState" style="display:none;">Nenhum registro ainda. Volte para a Ficha de Campo e cadastre a primeira edificação.</div>
+    </div>
+
+    <div class="export-row">
+      <button class="btn btn-ghost" id="exportCsvBtn">Exportar CSV</button>
+      <button class="btn btn-ghost" id="exportXlsxBtn">Exportar Excel</button>
+    </div>
+    <div class="export-row">
+      <button class="btn btn-ghost" id="exportPhotosBtn">Baixar todas as fotos (.zip)</button>
+    </div>
+    <div class="export-row">
+      <button class="btn btn-ghost" id="exportBackupBtn">Salvar backup (.json)</button>
+      <button class="btn btn-ghost" id="importBackupBtn">Restaurar backup (.json)</button>
+      <input type="file" id="importBackupInput" accept="application/json,.json" style="display:none;">
+    </div>
+    <div class="backup-hint">O backup guarda todos os campos, incluindo GPS, horário e fotos (em base64). Com muitas fotos, o arquivo de backup pode ficar grande — use o ZIP de fotos separadamente se preferir um backup mais leve.</div>
+  </section>
+
+  <footer class="app-footer">
+    Pesquisa de doutorado de Matheus Cordeiro Façanha — Programa de Pós-Graduação em Geografia, Universidade Estadual do Ceará (UECE).
+  </footer>
+</main>
+
+<div class="toast" id="toast"></div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+<script>
+(function(){
+  "use strict";
+
+  var DB_NAME = "verticalizacao_fortaleza_db_v2";
+  var DB_STORE = "records";
+  var records = [];
+  var editingId = null;
+  var sortKey = "id";
+  var sortDir = 1;
+  var currentUso = null;
+  var currentOcupado = null;
+  var currentCondicao = null;
+  var currentVenda = null;
+  var currentFotoBlob = null;
+  var currentLat = null;
+  var currentLng = null;
+
+  // ---------- IndexedDB ----------
+  function openDB(){
+    return new Promise(function(resolve, reject){
+      var req = indexedDB.open(DB_NAME, 1);
+      req.onupgradeneeded = function(e){
+        var db = e.target.result;
+        if(!db.objectStoreNames.contains(DB_STORE)){
+          db.createObjectStore(DB_STORE, { keyPath: "id" });
+        }
+      };
+      req.onsuccess = function(e){ resolve(e.target.result); };
+      req.onerror = function(e){ reject(e.target.error); };
+    });
+  }
+  function dbGetAll(){
+    return openDB().then(function(db){
+      return new Promise(function(resolve, reject){
+        var tx = db.transaction(DB_STORE, "readonly");
+        var req = tx.objectStore(DB_STORE).getAll();
+        req.onsuccess = function(){ resolve(req.result || []); };
+        req.onerror = function(){ reject(req.error); };
+      });
+    });
+  }
+  function dbPut(record){
+    return openDB().then(function(db){
+      return new Promise(function(resolve, reject){
+        var tx = db.transaction(DB_STORE, "readwrite");
+        tx.objectStore(DB_STORE).put(record);
+        tx.oncomplete = function(){ resolve(); };
+        tx.onerror = function(){ reject(tx.error); };
+      });
+    });
+  }
+  function dbDelete(id){
+    return openDB().then(function(db){
+      return new Promise(function(resolve, reject){
+        var tx = db.transaction(DB_STORE, "readwrite");
+        tx.objectStore(DB_STORE).delete(id);
+        tx.oncomplete = function(){ resolve(); };
+        tx.onerror = function(){ reject(tx.error); };
+      });
+    });
+  }
+
+  // ---------- id ----------
+  function nextId(){
+    var max = 0;
+    records.forEach(function(r){
+      var m = /^E(\d+)$/.exec(r.id);
+      if(m){ max = Math.max(max, parseInt(m[1],10)); }
+    });
+    var n = max + 1;
+    return "E" + String(n).padStart(3,"0");
+  }
+
+  // ---------- geolocation ----------
+  function getPosition(timeoutMs){
+    timeoutMs = timeoutMs || 25000;
+    return new Promise(function(resolve){
+      if(!("geolocation" in navigator)){
+        resolve({ ok:false, reason:"unsupported" });
+        return;
+      }
+      var settled = false;
+      var timer = setTimeout(function(){
+        if(!settled){ settled = true; resolve({ ok:false, reason:"timeout" }); }
+      }, timeoutMs);
+      navigator.geolocation.getCurrentPosition(
+        function(pos){
+          if(settled) return;
+          settled = true;
+          clearTimeout(timer);
+          resolve({ ok:true, lat: pos.coords.latitude, lng: pos.coords.longitude, accuracy: pos.coords.accuracy });
+        },
+        function(err){
+          if(settled) return;
+          settled = true;
+          clearTimeout(timer);
+          var reason = "unavailable";
+          if(err && err.code === 1) reason = "denied";
+          else if(err && err.code === 3) reason = "timeout";
+          resolve({ ok:false, reason: reason });
+        },
+        { enableHighAccuracy: true, timeout: Math.max(1000, timeoutMs - 1000), maximumAge: 60000 }
+      );
+    });
+  }
+
+  // ---------- toast ----------
+  var toastEl = document.getElementById("toast");
+  var toastTimer = null;
+  function showToast(msg){
+    toastEl.textContent = msg;
+    toastEl.classList.add("show");
+    clearTimeout(toastTimer);
+    var duration = Math.min(6000, Math.max(2400, msg.length * 60));
+    toastTimer = setTimeout(function(){ toastEl.classList.remove("show"); }, duration);
+  }
+
+  // ---------- map ----------
+  var map = null;
+  var marker = null;
+  var coordText = document.getElementById("coordText");
+
+  function updateCoordText(){
+    if(currentLat == null || currentLng == null){
+      coordText.textContent = "Nenhuma localização definida.";
+    } else {
+      coordText.textContent = "Lat " + currentLat.toFixed(6) + ", Lng " + currentLng.toFixed(6);
+    }
+  }
+
+  function setMarker(lat, lng){
+    currentLat = lat; currentLng = lng;
+    updateCoordText();
+    if(!map) return;
+    if(marker){
+      marker.setLatLng([lat, lng]);
+    } else {
+      marker = L.marker([lat, lng], { draggable: true }).addTo(map);
+      marker.on("dragend", function(){
+        var pos = marker.getLatLng();
+        currentLat = pos.lat; currentLng = pos.lng;
+        updateCoordText();
+      });
+    }
+    map.setView([lat, lng], 17);
+  }
+
+  function clearMarker(){
+    currentLat = null; currentLng = null;
+    if(marker && map){ map.removeLayer(marker); marker = null; }
+    updateCoordText();
+  }
+
+  function initMap(){
+    var mapDiv = document.getElementById("leafletMap");
+    var fallback = document.getElementById("mapFallback");
+    if(typeof L === "undefined"){
+      mapDiv.style.display = "none";
+      fallback.style.display = "block";
+      return;
+    }
+    map = L.map("leafletMap", { zoomControl: true }).setView([-3.7256, -38.4972], 15);
+    L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+      maxZoom: 19,
+      attribution: "&copy; OpenStreetMap"
+    }).addTo(map);
+    map.on("click", function(e){ setMarker(e.latlng.lat, e.latlng.lng); });
+  }
+
+  var getLocBtn = document.getElementById("getLocBtn");
+  getLocBtn.addEventListener("click", function(){
+    getLocBtn.disabled = true;
+    var originalLabel = getLocBtn.textContent;
+    getLocBtn.textContent = "📡 Aguardando sinal de GPS...";
+    showToast("Aguardando GPS — pode levar até 20-25s na primeira vez.");
+    getPosition().then(function(pos){
+      getLocBtn.disabled = false;
+      getLocBtn.textContent = originalLabel;
+      if(pos.ok){
+        setMarker(pos.lat, pos.lng);
+        showToast("Localização obtida.");
+      } else if(pos.reason === "denied"){
+        showToast("Permissão negada. No iPhone: Ajustes > Privacidade > Serviços de Localização > Safari > Perguntar/Permitir.");
+      } else if(pos.reason === "timeout"){
+        showToast("Sinal de GPS não chegou a tempo. Tente de novo em área mais aberta, ou toque no mapa / digite as coordenadas.");
+      } else if(pos.reason === "unsupported"){
+        showToast("Este navegador não oferece geolocalização. Toque no mapa ou digite as coordenadas.");
+      } else {
+        showToast("Não foi possível obter a localização. Toque no mapa ou digite as coordenadas.");
+      }
+    });
+  });
+  document.getElementById("clearLocBtn").addEventListener("click", clearMarker);
+
+  document.getElementById("manualCoordsBtn").addEventListener("click", function(){
+    var raw = document.getElementById("manualCoords").value.trim();
+    if(!raw){ showToast("Digite as coordenadas antes de usar."); return; }
+    var parts = raw.split(",");
+    if(parts.length !== 2){ showToast("Formato inválido. Use: latitude, longitude"); return; }
+    var lat = parseFloat(parts[0].trim().replace(",", "."));
+    var lng = parseFloat(parts[1].trim().replace(",", "."));
+    if(isNaN(lat) || isNaN(lng) || Math.abs(lat) > 90 || Math.abs(lng) > 180){
+      showToast("Coordenadas inválidas. Confira os valores.");
+      return;
+    }
+    setMarker(lat, lng);
+    document.getElementById("manualCoords").value = "";
+    showToast("Localização definida manualmente.");
+  });
+
+  // ---------- elements ----------
+  var idDisplay = document.getElementById("idDisplay");
+  var quarteiraoInput = document.getElementById("quarteirao");
+  var pavimentosInput = document.getElementById("pavimentos");
+  var anoInput = document.getElementById("ano");
+  var anoIndefCheckbox = document.getElementById("anoIndef");
+  var valorPedidoField = document.getElementById("valorPedidoField");
+  var valorPedidoInput = document.getElementById("valorPedido");
+  var obsInput = document.getElementById("obs");
+  var editBanner = document.getElementById("editBanner");
+  var editingIdLabel = document.getElementById("editingIdLabel");
+  var counterBadge = document.getElementById("counterBadge");
+  var quarteiraoList = document.getElementById("quarteiraoList");
+
+  // ---------- chips ----------
+  function setupChips(containerId, onSelect){
+    var container = document.getElementById(containerId);
+    container.querySelectorAll(".chip").forEach(function(chip){
+      chip.addEventListener("click", function(){
+        container.querySelectorAll(".chip").forEach(function(c){ c.classList.remove("selected"); });
+        chip.classList.add("selected");
+        onSelect(chip.getAttribute("data-value"));
+      });
+    });
+  }
+  setupChips("usoChips", function(v){ currentUso = v; });
+  setupChips("ocupadoChips", function(v){ currentOcupado = v; });
+  setupChips("condicaoChips", function(v){ currentCondicao = v; });
+  setupChips("vendaChips", function(v){
+    currentVenda = v;
+    valorPedidoField.style.display = (v === "Sim") ? "block" : "none";
+    if(v !== "Sim"){ valorPedidoInput.value = ""; }
+  });
+
+  function selectChip(containerId, value){
+    var container = document.getElementById(containerId);
+    container.querySelectorAll(".chip").forEach(function(c){
+      c.classList.toggle("selected", c.getAttribute("data-value") === value);
+    });
+  }
+
+  // ---------- steppers ----------
+  function stepValue(input, delta, min){
+    var v = parseInt(input.value, 10);
+    if(isNaN(v)) v = (min !== undefined ? min : 0);
+    v += delta;
+    if(min !== undefined && v < min) v = min;
+    input.value = v;
+  }
+  document.getElementById("pavMinus").addEventListener("click", function(){ stepValue(pavimentosInput, -1, 0); });
+  document.getElementById("pavPlus").addEventListener("click", function(){ stepValue(pavimentosInput, 1, 0); });
+  document.getElementById("anoMinus").addEventListener("click", function(){ stepValue(anoInput, -1); });
+  document.getElementById("anoPlus").addEventListener("click", function(){ stepValue(anoInput, 1); });
+
+  anoIndefCheckbox.addEventListener("change", function(){
+    anoInput.disabled = anoIndefCheckbox.checked;
+    if(anoIndefCheckbox.checked) anoInput.value = "";
+  });
+
+  // ---------- foto ----------
+  var fotoInput = document.getElementById("fotoInput");
+  var fotoTakeBtn = document.getElementById("fotoTakeBtn");
+  var fotoPreviewWrap = document.getElementById("fotoPreviewWrap");
+  var fotoPreview = document.getElementById("fotoPreview");
+
+  function showFotoPreview(blob){
+    fotoPreview.src = URL.createObjectURL(blob);
+    fotoPreviewWrap.style.display = "block";
+    fotoTakeBtn.style.display = "none";
+  }
+  function clearFotoPreview(){
+    currentFotoBlob = null;
+    fotoPreview.src = "";
+    fotoPreviewWrap.style.display = "none";
+    fotoTakeBtn.style.display = "block";
+  }
+  fotoTakeBtn.addEventListener("click", function(){ fotoInput.click(); });
+  document.getElementById("fotoRetakeBtn").addEventListener("click", function(){ fotoInput.click(); });
+  document.getElementById("fotoRemoveBtn").addEventListener("click", clearFotoPreview);
+  fotoInput.addEventListener("change", function(e){
+    var file = e.target.files && e.target.files[0];
+    if(!file) return;
+    currentFotoBlob = file;
+    showFotoPreview(file);
+  });
+
+  // ---------- form lifecycle ----------
+  function resetFormForNew(){
+    editingId = null;
+    editBanner.style.display = "none";
+    idDisplay.textContent = nextId();
+    quarteiraoInput.value = "";
+    pavimentosInput.value = "";
+    anoInput.value = "";
+    anoIndefCheckbox.checked = false;
+    anoInput.disabled = false;
+    obsInput.value = "";
+    currentUso = null;
+    currentOcupado = null;
+    currentCondicao = null;
+    currentVenda = null;
+    valorPedidoInput.value = "";
+    valorPedidoField.style.display = "none";
+    selectChip("usoChips", null);
+    selectChip("ocupadoChips", null);
+    selectChip("condicaoChips", null);
+    selectChip("vendaChips", null);
+    clearFotoPreview();
+    clearMarker();
+    document.getElementById("manualCoords").value = "";
+    quarteiraoInput.focus();
+  }
+
+  function loadRecordIntoForm(record){
+    editingId = record.id;
+    editBanner.style.display = "flex";
+    editingIdLabel.textContent = record.id;
+    idDisplay.textContent = record.id;
+    quarteiraoInput.value = record.quarteirao || "";
+    pavimentosInput.value = (record.pavimentos !== null && record.pavimentos !== undefined) ? record.pavimentos : "";
+    if(record.anoIndef){
+      anoIndefCheckbox.checked = true;
+      anoInput.value = "";
+      anoInput.disabled = true;
+    } else {
+      anoIndefCheckbox.checked = false;
+      anoInput.disabled = false;
+      anoInput.value = (record.ano !== null && record.ano !== undefined) ? record.ano : "";
+    }
+    obsInput.value = record.observacoes || "";
+    currentUso = record.uso || null;
+    currentOcupado = record.ocupado || null;
+    currentCondicao = record.condicaoPredio || null;
+    currentVenda = record.apartamentoVenda || null;
+    selectChip("usoChips", currentUso);
+    selectChip("ocupadoChips", currentOcupado);
+    selectChip("condicaoChips", currentCondicao);
+    selectChip("vendaChips", currentVenda);
+    if(currentVenda === "Sim"){
+      valorPedidoField.style.display = "block";
+      valorPedidoInput.value = (record.valorPedido !== null && record.valorPedido !== undefined) ? record.valorPedido : "";
+    } else {
+      valorPedidoField.style.display = "none";
+      valorPedidoInput.value = "";
+    }
+    if(record.fotoBlob){ currentFotoBlob = record.fotoBlob; showFotoPreview(record.fotoBlob); }
+    else { clearFotoPreview(); }
+    if(record.lat != null && record.lng != null){ setMarker(record.lat, record.lng); }
+    else { clearMarker(); }
+    switchScreen("form");
+    window.scrollTo({top:0, behavior:"smooth"});
+  }
+
+  document.getElementById("cancelEditBtn").addEventListener("click", function(){ resetFormForNew(); });
+  document.getElementById("newBtn").addEventListener("click", function(){ resetFormForNew(); });
+
+  // ---------- save ----------
+  var saveBtn = document.getElementById("saveBtn");
+
+  saveBtn.addEventListener("click", function(){
+    var quarteirao = quarteiraoInput.value.trim();
+    var pavRaw = pavimentosInput.value.trim();
+    var pavimentos = pavRaw === "" ? null : parseInt(pavRaw, 10);
+    var anoIndef = anoIndefCheckbox.checked;
+    var anoRaw = anoInput.value.trim();
+    var ano = (anoIndef || anoRaw === "") ? null : parseInt(anoRaw, 10);
+    var uso = currentUso || "Não identificado";
+    var ocupado = currentOcupado;
+    var condicaoPredio = currentCondicao;
+    var apartamentoVenda = currentVenda;
+    var valorPedidoRaw = valorPedidoInput.value.trim();
+    var valorPedido = (apartamentoVenda === "Sim" && valorPedidoRaw !== "") ? parseFloat(valorPedidoRaw) : null;
+    var observacoes = obsInput.value.trim();
+
+    if(pavRaw !== "" && isNaN(pavimentos)){
+      showToast("Número de pavimentos inválido.");
+      return;
+    }
+
+    var now = new Date().toISOString();
+    var id = editingId || idDisplay.textContent;
+
+    function finish(lat, lng, gpsAccuracy){
+      var record = {
+        id: id, quarteirao: quarteirao, pavimentos: pavimentos,
+        uso: uso, ano: ano, anoIndef: anoIndef,
+        ocupado: ocupado, condicaoPredio: condicaoPredio,
+        apartamentoVenda: apartamentoVenda, valorPedido: valorPedido,
+        observacoes: observacoes,
+        fotoBlob: currentFotoBlob || null,
+        lat: lat, lng: lng, gpsAccuracy: gpsAccuracy != null ? gpsAccuracy : null,
+        createdAt: editingId ? (recordsFind(editingId, "createdAt") || now) : now,
+        updatedAt: now
+      };
+      dbPut(record).then(function(){
+        if(editingId){
+          var idx = records.findIndex(function(r){ return r.id === id; });
+          if(idx > -1){ records[idx] = record; } else { records.push(record); }
+          showToast("Registro " + id + " atualizado.");
+          renderCounter();
+          renderTable();
+          switchScreen("table");
+        } else {
+          records.push(record);
+          showToast(record.lat != null ? ("Registro " + id + " salvo (com GPS).") : ("Registro " + id + " salvo (sem GPS)."));
+          renderCounter();
+          updateQuarteiraoList();
+          resetFormForNew();
+        }
+        saveBtn.disabled = false;
+        saveBtn.textContent = "SALVAR";
+      });
+    }
+
+    function recordsFind(rid, key){
+      var r = records.find(function(x){ return x.id === rid; });
+      return r ? r[key] : null;
+    }
+
+    if(currentLat != null && currentLng != null){
+      finish(currentLat, currentLng, null);
+    } else if(editingId){
+      finish(null, null, null);
+    } else {
+      saveBtn.disabled = true;
+      saveBtn.textContent = "OBTENDO LOCALIZAÇÃO...";
+      getPosition(8000).then(function(pos){
+        finish(pos.ok ? pos.lat : null, pos.ok ? pos.lng : null, pos.ok ? pos.accuracy : null);
+      });
+    }
+  });
+
+  // ---------- counter ----------
+  function renderCounter(){ counterBadge.textContent = records.length; }
+
+  // ---------- quarteirao autocomplete list ----------
+  function updateQuarteiraoList(){
+    var seen = {};
+    var html = "";
+    records.forEach(function(r){
+      if(r.quarteirao && !seen[r.quarteirao]){
+        seen[r.quarteirao] = true;
+        html += '<option value="' + escapeHtml(r.quarteirao) + '"></option>';
+      }
+    });
+    quarteiraoList.innerHTML = html;
+  }
+
+  // ---------- table ----------
+  var tableBody = document.getElementById("tableBody");
+  var emptyState = document.getElementById("emptyState");
+  var searchInput = document.getElementById("searchInput");
+
+  function escapeHtml(s){
+    return String(s == null ? "" : s).replace(/[&<>"']/g, function(c){
+      return {"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;"}[c];
+    });
+  }
+  function displayAno(r){
+    return r.anoIndef ? "Não identificado" : (r.ano === null || r.ano === undefined ? "—" : r.ano);
+  }
+  function displayPav(r){
+    return (r.pavimentos === null || r.pavimentos === undefined) ? "—" : r.pavimentos;
+  }
+  function displayMoney(v){
+    if(v === null || v === undefined || isNaN(v)) return "—";
+    return "R$ " + Number(v).toLocaleString("pt-BR");
+  }
+  function displayWhen(r){
+    if(!r.createdAt) return "—";
+    var d = new Date(r.createdAt);
+    if(isNaN(d.getTime())) return "—";
+    var dd = String(d.getDate()).padStart(2,"0");
+    var mm = String(d.getMonth()+1).padStart(2,"0");
+    var hh = String(d.getHours()).padStart(2,"0");
+    var mi = String(d.getMinutes()).padStart(2,"0");
+    return dd + "/" + mm + " " + hh + ":" + mi;
+  }
+  function displayGps(r){
+    if(r.lat == null || r.lng == null) return '<span class="gps-pending">sem GPS</span>';
+    var url = "https://www.google.com/maps?q=" + r.lat + "," + r.lng;
+    return '<a class="gps-link" href="' + url + '" target="_blank" rel="noopener">ver no mapa</a>';
+  }
+  function displayFotoCell(r){
+    if(!r.fotoBlob) return '<span class="gps-pending">sem foto</span>';
+    var url = URL.createObjectURL(r.fotoBlob);
+    return '<a href="' + url + '" download="' + escapeHtml(r.id) + '.jpg" title="Baixar foto"><img class="thumb" src="' + url + '"></a>';
+  }
+
+  function getFiltered(){
+    var q = searchInput.value.trim().toLowerCase();
+    var list = records.slice();
+    if(q){
+      list = list.filter(function(r){
+        return (r.id && r.id.toLowerCase().indexOf(q) > -1) ||
+               (r.quarteirao && r.quarteirao.toLowerCase().indexOf(q) > -1);
+      });
+    }
+    list.sort(function(a,b){
+      var av = a[sortKey], bv = b[sortKey];
+      if(sortKey === "ano"){ av = a.anoIndef ? -1 : (a.ano==null?-1:a.ano); bv = b.anoIndef ? -1 : (b.ano==null?-1:b.ano); }
+      if(sortKey === "pavimentos"){ av = a.pavimentos==null?-1:a.pavimentos; bv = b.pavimentos==null?-1:b.pavimentos; }
+      if(typeof av === "string") av = av.toLowerCase();
+      if(typeof bv === "string") bv = bv.toLowerCase();
+      if(av == null) av = "";
+      if(bv == null) bv = "";
+      if(av < bv) return -1 * sortDir;
+      if(av > bv) return 1 * sortDir;
+      return 0;
+    });
+    return list;
+  }
+
+  function renderTable(){
+    var list = getFiltered();
+    if(list.length === 0){
+      tableBody.innerHTML = "";
+      emptyState.style.display = "block";
+      return;
+    }
+    emptyState.style.display = "none";
+    var html = "";
+    list.forEach(function(r){
+      html += "<tr>" +
+        '<td class="mono">' + escapeHtml(r.id) + "</td>" +
+        "<td>" + escapeHtml(r.quarteirao || "—") + "</td>" +
+        "<td>" + displayPav(r) + "</td>" +
+        "<td>" + escapeHtml(r.uso || "—") + "</td>" +
+        "<td>" + displayAno(r) + "</td>" +
+        "<td>" + escapeHtml(r.ocupado || "—") + "</td>" +
+        "<td>" + escapeHtml(r.condicaoPredio || "—") + "</td>" +
+        "<td>" + escapeHtml(r.apartamentoVenda || "—") + "</td>" +
+        "<td>" + displayMoney(r.valorPedido) + "</td>" +
+        "<td>" + displayFotoCell(r) + "</td>" +
+        '<td class="obs">' + escapeHtml(r.observacoes || "") + "</td>" +
+        "<td>" + displayWhen(r) + "</td>" +
+        "<td>" + displayGps(r) + "</td>" +
+        '<td><div class="row-actions">' +
+          '<button class="btn btn-ghost btn-sm" data-action="edit" data-id="' + escapeHtml(r.id) + '">Editar</button>' +
+          '<button class="btn btn-ghost btn-sm" data-action="duplicate" data-id="' + escapeHtml(r.id) + '">Duplicar</button>' +
+          '<button class="btn btn-danger btn-sm" data-action="delete" data-id="' + escapeHtml(r.id) + '">Excluir</button>' +
+        "</div></td>" +
+      "</tr>";
+    });
+    tableBody.innerHTML = html;
+  }
+
+  tableBody.addEventListener("click", function(e){
+    var btn = e.target.closest("button[data-action]");
+    if(!btn) return;
+    var id = btn.getAttribute("data-id");
+    var action = btn.getAttribute("data-action");
+    var record = records.find(function(r){ return r.id === id; });
+    if(!record) return;
+
+    if(action === "edit"){
+      loadRecordIntoForm(record);
+    } else if(action === "delete"){
+      if(confirm("Excluir o registro " + id + "? Esta ação não pode ser desfeita.")){
+        dbDelete(id).then(function(){
+          records = records.filter(function(r){ return r.id !== id; });
+          renderCounter();
+          renderTable();
+          showToast("Registro " + id + " excluído.");
+        });
+      }
+    } else if(action === "duplicate"){
+      var now = new Date().toISOString();
+      var newRecord = Object.assign({}, record, { id: nextId(), createdAt: now, updatedAt: now });
+      dbPut(newRecord).then(function(){
+        records.push(newRecord);
+        renderCounter();
+        renderTable();
+        showToast("Registro duplicado como " + newRecord.id + ".");
+      });
+    }
+  });
+
+  searchInput.addEventListener("input", renderTable);
+
+  document.querySelectorAll("#recordsTable th[data-key]").forEach(function(th){
+    th.addEventListener("click", function(){
+      var key = th.getAttribute("data-key");
+      if(sortKey === key){ sortDir *= -1; } else { sortKey = key; sortDir = 1; }
+      document.querySelectorAll("#recordsTable th .arrow").forEach(function(a){ a.textContent = ""; });
+      th.querySelector(".arrow").textContent = sortDir === 1 ? "▲" : "▼";
+      renderTable();
+    });
+  });
+
+  // ---------- tabs ----------
+  var tabs = document.querySelectorAll(".tab");
+  function switchScreen(name){
+    document.querySelectorAll(".screen").forEach(function(s){ s.classList.remove("active"); });
+    document.getElementById("screen-" + name).classList.add("active");
+    tabs.forEach(function(t){ t.classList.toggle("active", t.getAttribute("data-screen") === name); });
+    if(name === "table"){ renderTable(); }
+    if(name === "form" && map){ setTimeout(function(){ map.invalidateSize(); }, 50); }
+  }
+  tabs.forEach(function(t){
+    t.addEventListener("click", function(){ switchScreen(t.getAttribute("data-screen")); });
+  });
+
+  // ---------- export ----------
+  function buildRows(){
+    return records.map(function(r){
+      return {
+        "ID": r.id,
+        "Quarteirão": r.quarteirao || "",
+        "Pavimentos": r.pavimentos === null || r.pavimentos === undefined ? "" : r.pavimentos,
+        "Uso predominante": r.uso || "",
+        "Ano de construção": r.anoIndef ? "Não identificado" : (r.ano === null || r.ano === undefined ? "" : r.ano),
+        "Prédio ocupado": r.ocupado || "",
+        "Condição do prédio": r.condicaoPredio || "",
+        "Unidade à venda": r.apartamentoVenda || "",
+        "Valor pedido (R$)": r.valorPedido === null || r.valorPedido === undefined ? "" : r.valorPedido,
+        "Foto anexada": r.fotoBlob ? "Sim" : "Não",
+        "Observações": r.observacoes || "",
+        "Data/Hora do levantamento": displayWhenFull(r.createdAt),
+        "Latitude": r.lat == null ? "" : r.lat,
+        "Longitude": r.lng == null ? "" : r.lng
+      };
+    });
+  }
+  function displayWhenFull(iso){
+    if(!iso) return "";
+    var d = new Date(iso);
+    if(isNaN(d.getTime())) return "";
+    var dd = String(d.getDate()).padStart(2,"0");
+    var mm = String(d.getMonth()+1).padStart(2,"0");
+    var yyyy = d.getFullYear();
+    var hh = String(d.getHours()).padStart(2,"0");
+    var mi = String(d.getMinutes()).padStart(2,"0");
+    return dd + "/" + mm + "/" + yyyy + " " + hh + ":" + mi;
+  }
+
+  document.getElementById("exportCsvBtn").addEventListener("click", function(){
+    if(records.length === 0){ showToast("Não há registros para exportar."); return; }
+    var rows = buildRows();
+    var headers = Object.keys(rows[0]);
+    var lines = [headers.join(";")];
+    rows.forEach(function(row){
+      lines.push(headers.map(function(h){
+        var v = String(row[h]).replace(/"/g,'""');
+        if(v.indexOf(";") > -1 || v.indexOf('"') > -1 || v.indexOf("\n") > -1){ v = '"' + v + '"'; }
+        return v;
+      }).join(";"));
+    });
+    var csv = "\uFEFF" + lines.join("\r\n");
+    var blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+    downloadBlob(blob, "verticalizacao_orla_fortaleza_" + dateStamp() + ".csv");
+  });
+
+  document.getElementById("exportXlsxBtn").addEventListener("click", function(){
+    if(records.length === 0){ showToast("Não há registros para exportar."); return; }
+    if(typeof XLSX === "undefined"){
+      showToast("Exportação em Excel indisponível offline. Use o CSV ou conecte-se à internet uma vez.");
+      return;
+    }
+    var rows = buildRows();
+    var ws = XLSX.utils.json_to_sheet(rows);
+    var wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, "Registros");
+    XLSX.writeFile(wb, "verticalizacao_orla_fortaleza_" + dateStamp() + ".xlsx");
+  });
+
+  document.getElementById("exportPhotosBtn").addEventListener("click", function(){
+    var withPhoto = records.filter(function(r){ return !!r.fotoBlob; });
+    if(withPhoto.length === 0){ showToast("Nenhuma foto cadastrada ainda."); return; }
+    if(typeof JSZip === "undefined"){
+      showToast("Download em .zip indisponível offline. Baixe as fotos individualmente na tabela.");
+      return;
+    }
+    var zip = new JSZip();
+    withPhoto.forEach(function(r){ zip.file(r.id + ".jpg", r.fotoBlob); });
+    zip.generateAsync({ type: "blob" }).then(function(blob){
+      downloadBlob(blob, "fotos_verticalizacao_orla_fortaleza_" + dateStamp() + ".zip");
+    });
+  });
+
+  function dateStamp(){
+    var d = new Date();
+    return d.getFullYear() + String(d.getMonth()+1).padStart(2,"0") + String(d.getDate()).padStart(2,"0");
+  }
+  function downloadBlob(blob, filename){
+    var url = URL.createObjectURL(blob);
+    var a = document.createElement("a");
+    a.href = url; a.download = filename;
+    document.body.appendChild(a); a.click(); document.body.removeChild(a);
+    setTimeout(function(){ URL.revokeObjectURL(url); }, 1000);
+  }
+
+  // ---------- blob <-> base64 helpers ----------
+  function blobToDataURL(blob){
+    return new Promise(function(resolve, reject){
+      var reader = new FileReader();
+      reader.onload = function(){ resolve(reader.result); };
+      reader.onerror = reject;
+      reader.readAsDataURL(blob);
+    });
+  }
+  function dataURLToBlob(dataURL){
+    var parts = dataURL.split(",");
+    var mimeMatch = /:(.*?);/.exec(parts[0]);
+    var mime = mimeMatch ? mimeMatch[1] : "image/jpeg";
+    var binary = atob(parts[1]);
+    var arr = new Uint8Array(binary.length);
+    for(var i=0; i<binary.length; i++){ arr[i] = binary.charCodeAt(i); }
+    return new Blob([arr], { type: mime });
+  }
+
+  // ---------- backup (JSON) ----------
+  document.getElementById("exportBackupBtn").addEventListener("click", function(){
+    if(records.length === 0){ showToast("Não há registros para salvar em backup."); return; }
+    showToast("Preparando backup...");
+    Promise.all(records.map(function(r){
+      if(r.fotoBlob){
+        return blobToDataURL(r.fotoBlob).then(function(dataUrl){
+          var copy = Object.assign({}, r);
+          delete copy.fotoBlob;
+          copy.fotoDataUrl = dataUrl;
+          return copy;
+        });
+      }
+      var copy = Object.assign({}, r);
+      delete copy.fotoBlob;
+      return Promise.resolve(copy);
+    })).then(function(safeRecords){
+      var payload = {
+        app: "Ficha de Campo — Verticalização da Orla de Fortaleza",
+        pesquisa: "Matheus Cordeiro Façanha — Doutorando em Geografia, PPG em Geografia, Universidade Estadual do Ceará (UECE)",
+        exportedAt: new Date().toISOString(),
+        records: safeRecords
+      };
+      var blob = new Blob([JSON.stringify(payload)], { type: "application/json;charset=utf-8;" });
+      downloadBlob(blob, "backup_verticalizacao_orla_fortaleza_" + dateStamp() + ".json");
+      showToast("Backup salvo (" + records.length + " registros).");
+    });
+  });
+
+  var importBackupInput = document.getElementById("importBackupInput");
+  document.getElementById("importBackupBtn").addEventListener("click", function(){
+    importBackupInput.value = "";
+    importBackupInput.click();
+  });
+  importBackupInput.addEventListener("change", function(e){
+    var file = e.target.files && e.target.files[0];
+    if(!file) return;
+    var reader = new FileReader();
+    reader.onload = function(){
+      var data;
+      try{ data = JSON.parse(reader.result); }
+      catch(err){ showToast("Arquivo inválido: não é um backup JSON reconhecível."); return; }
+      var incoming = Array.isArray(data) ? data : (Array.isArray(data.records) ? data.records : null);
+      if(!incoming){ showToast("Arquivo inválido: nenhum registro encontrado."); return; }
+
+      var existingIds = {};
+      records.forEach(function(r){ existingIds[r.id] = true; });
+
+      var toAdd = incoming.filter(function(r){ return r && r.id && !existingIds[r.id]; });
+      var skipped = incoming.length - toAdd.length;
+
+      Promise.all(toAdd.map(function(r){
+        if(r.fotoDataUrl){
+          try{
+            var blob = dataURLToBlob(r.fotoDataUrl);
+            var copy = Object.assign({}, r);
+            delete copy.fotoDataUrl;
+            copy.fotoBlob = blob;
+            return copy;
+          }catch(err){
+            var copy2 = Object.assign({}, r);
+            delete copy2.fotoDataUrl;
+            copy2.fotoBlob = null;
+            return copy2;
+          }
+        }
+        return r;
+      })).then(function(readyRecords){
+        return Promise.all(readyRecords.map(function(r){ return dbPut(r).then(function(){ records.push(r); }); }));
+      }).then(function(){
+        renderCounter();
+        updateQuarteiraoList();
+        renderTable();
+        showToast("Backup restaurado: " + toAdd.length + " adicionados, " + skipped + " já existentes (mantidos).");
+      });
+    };
+    reader.readAsText(file);
+  });
+
+  // ---------- init ----------
+  if("serviceWorker" in navigator && (location.protocol === "https:" || location.hostname === "localhost")){
+    navigator.serviceWorker.register("service-worker.js").catch(function(){ /* silencioso: sem SW, app continua funcionando normalmente */ });
+  }
+  initMap();
+  dbGetAll().then(function(all){
+    records = all;
+    renderCounter();
+    updateQuarteiraoList();
+    resetFormForNew();
+    renderTable();
+  });
+
+})();
+</script>
+</body>
+</html>

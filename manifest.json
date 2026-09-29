@@ -1,0 +1,11 @@
+{
+  "name": "Ficha de Campo — Verticalização da Orla de Fortaleza",
+  "short_name": "Ficha Verticalização",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#0A4448",
+  "theme_color": "#0A4448",
+  "orientation": "portrait-primary",
+  "icons": []
+}
